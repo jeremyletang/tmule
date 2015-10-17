@@ -262,6 +262,18 @@ template <typename Fn>
 bool for_all(Fn f, nil_t) noexcept
 { return true; }
 
+// mem
+template <typename A,
+          typename L,
+          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
+          std::enable_if_t<std::is_same<A, typename L::head_type>::value>* = nullptr>
+bool mem(const A& a, const L& l) noexcept
+{ return a == l.h || mem(a, l.t); }
+
+template <typename A>
+bool mem(const A&, nil_t) noexcept
+{ return false; }
+
 // for_all2
 template <typename L1,
           typename L2,

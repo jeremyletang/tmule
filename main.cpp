@@ -46,6 +46,8 @@ int main() {
     std::cout << std::boolalpha << l::exists([](auto i) {return i == 42;}, a) << std::endl;
     std::cout << std::boolalpha << l::for_all([](auto i) {return i < 5;}, a) << std::endl;
     std::cout << std::boolalpha << l::for_all([](auto i) {return i > 5;}, a) << std::endl;
+    std::cout << std::boolalpha << l::mem(2, a) << std::endl;
+    std::cout << std::boolalpha << l::mem(10, a) << std::endl;
     std::cout << "assoc 'c' in e: " << i << std::endl;
     std::cout << "find 3 - 1 in a: " << l::find([](auto i) {return i == (3-1); }, a) << std::endl;
     std::cout << "a len: " << l::length<decltype(a)>::value << std::endl;
