@@ -162,6 +162,24 @@ constexpr void iter(Fn f, const L& l) {
 template <typename Fn>
 constexpr void iter(Fn f, const nil_t) {}
 
+// iter2
+
+template <typename L1,
+          typename L2,
+          typename Fn,
+          std::enable_if_t<l::is_imm_list<L1>::value>* = nullptr,
+          std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
+          std::enable_if_t<std::is_same<typename L1::head_type,
+                                        typename L2::head_type>::value>* = nullptr>
+constexpr void iter2(Fn f, const L1& l1, const L2& l2) {
+    f(l1.h, l2.h);
+    iter2(f, l1.t, l2.t);
+}
+
+template <typename Fn>
+constexpr void iter2(Fn, nil_t, nil_t) {}
+
+
 // iteri
 
 template <std::size_t N,
