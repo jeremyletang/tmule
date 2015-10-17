@@ -209,7 +209,8 @@ template <typename From,
 constexpr auto rev_(From f, To t) noexcept -> decltype(rev_(f.t, l::cons_<decltype(f.h), To>(f.h, t)))
 { return rev_(f.t, l::cons_<decltype(f.h), To>(f.h, t)); }
 
-template <typename Head, typename To>
+template <typename Head,
+          typename To>
 constexpr cons_<Head, To> rev_(const cons_<Head, nil_t>& f, To t) noexcept
 { return cons_<Head, To>(f.h, t); }
 
@@ -224,6 +225,106 @@ constexpr L rev(const L& l) noexcept
 template <typename Head>
 cons_<Head, nil_t> rev(const cons_<Head, nil_t>& l) noexcept
 { return l; }
+
+// map
+template <typename Fn,
+          typename From,
+          typename To>
+constexpr auto map_(Fn f, From fl, To t) noexcept
+    -> decltype(map_(f, fl.t, cons_<decltype(f(fl.h)), To>(f(fl.h), t)))
+{ return map_(f, fl.t, l::cons_<decltype(f(fl.h)), To>(f(fl.h), t)); }
+
+template <typename Fn,
+          typename Head,
+          typename To>
+auto map_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept -> cons_<decltype(f(l.h)), To>
+{ return cons_<decltype(f(l.h)), To>(f(l.h), t); }
+
+// map list of more than one element
+template <typename Fn,
+          typename L,
+          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
+          std::enable_if_t<l::is_not_nil_t<L, L>::value>* = nullptr>
+auto map(Fn f, const L& l) noexcept
+    -> decltype(map_(f, l.t, cons_<decltype(f(l.h)), nil_t>(f(l.h), l::nil_t{})))
+{ return map_(f, l.t, l::cons_<decltype(f(l.h)), l::nil_t>(f(l.h), l::nil_t{})); }
+
+// explictly one element
+template <typename Fn,
+          typename Head>
+auto map(Fn f, const cons_<Head, nil_t>& l) noexcept -> cons_<decltype(f(l.h)), nil_t>
+{ return cons_<decltype(f(l.h)), nil_t>(f(l.h), nil_t{}); }
+
+
+
+
+// map2
+template <typename Fn,
+          typename From1,
+          typename From2,
+          typename To>
+constexpr auto map2_(Fn f, const From1& f1, const From2& f2, const To& t) noexcept
+    -> decltype(map2_(f, f1.t, f2.t, cons_<decltype(f(f1.h, f2.h)), To>(f(f1.h, f2.h), t)))
+{ return map2_(f, f1.t, f2.t, l::cons_<decltype(f(f1.h, f2.h)), To>(f(f1.h. f2.h), t)); }
+
+template <typename Fn,
+          typename Head1,
+          typename Head2,
+          typename To>
+auto map2_(Fn f, const cons_<Head1, nil_t>& l1, const cons_<Head2, nil_t>& l2, const To& t) noexcept
+    -> cons_<decltype(f(l1.h, l2.h)), To>
+{ return cons_<decltype(f(l1.h, l2.h)), To>(f(l1.h, l2.h), t); }
+
+// map list of more than one element
+template <typename Fn,
+          typename L1,
+          typename L2,
+          std::enable_if_t<l::is_imm_list<L1>::value>* = nullptr,
+          std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
+          std::enable_if_t<l::is_not_nil_t<L1, L2>::value>* = nullptr,
+          std::enable_if_t<l::length<L1>::value == l::length<L2>::value>* = nullptr>
+auto map2(Fn f, const L1& l1, const L2& l2) noexcept
+    -> decltype(map2_(f, l1.t, l2.t, cons_<decltype(f(l1.h, l2.h)), nil_t>(f(l1.h, l2.h), l::nil_t{})))
+{ return map2_(f, l1.t, l2.t, cons_<decltype(f(l1.h, l2.h)), nil_t>(f(l1.h, l2.h), nil_t{})); }
+
+// explictly one element
+template <typename Fn,
+          typename Head1,
+          typename Head2>
+auto map2(Fn f, const cons_<Head1, nil_t>& l1, const cons_<Head2, nil_t>& l2) noexcept
+    -> cons_<decltype(f(l1.h, l2.h)), nil_t>
+{ return cons_<decltype(f(l1.h, l2.h)), nil_t>(f(l1.h, l2.h), nil_t{}); }
+
+// mapi
+template <std::size_t N,
+          typename Fn,
+          typename From,
+          typename To>
+auto mapi_(Fn f, From fl, To t) noexcept
+    // FIXME: not able to delcare this type.
+    // -> decltype(mapi_<N+1>(f, fl.t, cons_<decltype(f(N, fl.h)), To>(f(N, fl.h), t)))
+{ return mapi_<N+1>(f, fl.t, cons_<decltype(f(N, fl.h)), To>(f(N, fl.h), t)); }
+
+template <std::size_t N,
+          typename Fn,
+          typename Head,
+          typename To>
+auto mapi_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept -> cons_<decltype(f(N, l.h)), To>
+{ return cons_<decltype(f(N, l.h)), To>(f(N, l.h), t); }
+
+// mapi list of more than one element
+template <typename Fn,
+          typename L,
+          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
+          std::enable_if_t<l::is_not_nil_t<L, L>::value>* = nullptr>
+auto mapi(Fn f, const L& l) noexcept
+    -> decltype(mapi_<1>(f, l.t, cons_<decltype(f(0, l.h)), nil_t>(f(0, l.h), l::nil_t{})))
+{ return mapi_<1>(f, l.t, l::cons_<decltype(f(0, l.h)), l::nil_t>(f(0, l.h), l::nil_t{})); }
+
+// explictly one element
+template <typename Fn, typename Head>
+auto mapi(Fn f, const cons_<Head, nil_t>& l) noexcept -> cons_<decltype(f(0, l.h)), nil_t>
+{ return cons_<decltype(f(0, l.h)), nil_t>(f(0, l.h), nil_t{}); }
 
 template <typename L1,
           typename L2,
@@ -430,7 +531,8 @@ template <typename Head>
 constexpr l::cons_<Head, l::nil_t> cons(const Head& h)
 { return std::move(l::cons_<Head, l::nil_t>(h, nil)); }
 
-template <typename Head, typename Tail>
+template <typename Head,
+          typename Tail>
 std::ostream& operator<<(std::ostream& os, const l::cons_<Head, Tail>& l) {
     os << "[";
     std::size_t i = l::length<l::cons_<Head, Tail>>::value;

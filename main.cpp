@@ -63,5 +63,9 @@ int main() {
     add_element(cons(20, cons(10)));
     l::iteri([](std::size_t i, auto e){ std::cout << "i: " << i << " -> " << e << std::endl;}, a);
     l::iter2([](auto e1, auto e2){ std::cout << "e1:" << e1 << ", e2:" << e2 << std::endl;}, a, a);
-    // auto m = l::map([](auto e) -> float { return static_cast<float>(e * 10); }, a);
+    auto to_map = cons(1, cons(0, nil));
+    l::cons_<float, l::cons_<float, l::nil_t>> m =
+        l::map([](auto e){ return static_cast<float>(e * 10); }, to_map);
+    l::cons_<float, l::cons_<float, l::nil_t>> mi =
+        l::mapi([](std::size_t i, auto e){ return static_cast<float>(e * 10 + i); }, to_map);
 }
