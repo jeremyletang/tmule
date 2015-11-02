@@ -29,6 +29,9 @@
 
 namespace l {
 
+template <typename L>
+struct type;
+
 class not_found: public std::exception {
 public:
     std::string what_;
@@ -93,7 +96,7 @@ struct length_<N, cons_<Head, nil_t>> {
 
 template <typename T>
 struct length {
-    static constexpr std::size_t value = length_<0, T>::value;
+    static constexpr std::size_t value = length_<0, std::remove_cv_t<T>>::value;
 };
 
 template <>
@@ -223,7 +226,7 @@ constexpr L rev(const L& l) noexcept
 
 // explictly one element
 template <typename Head>
-cons_<Head, nil_t> rev(const cons_<Head, nil_t>& l) noexcept
+constexpr cons_<Head, nil_t> rev(const cons_<Head, nil_t>& l) noexcept
 { return l; }
 
 // map
@@ -237,7 +240,7 @@ constexpr auto map_(Fn f, From fl, To t) noexcept
 template <typename Fn,
           typename Head,
           typename To>
-auto map_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept -> cons_<decltype(f(l.h)), To>
+constexpr auto map_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept -> cons_<decltype(f(l.h)), To>
 { return cons_<decltype(f(l.h)), To>(f(l.h), t); }
 
 // map list of more than one element
@@ -245,14 +248,14 @@ template <typename Fn,
           typename L,
           std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
           std::enable_if_t<l::is_not_nil_t<L, L>::value>* = nullptr>
-auto map(Fn f, const L& l) noexcept
+constexpr auto map(Fn f, const L& l) noexcept
     -> decltype(map_(f, l.t, cons_<decltype(f(l.h)), nil_t>(f(l.h), l::nil_t{})))
 { return map_(f, l.t, l::cons_<decltype(f(l.h)), l::nil_t>(f(l.h), l::nil_t{})); }
 
 // explictly one element
 template <typename Fn,
           typename Head>
-auto map(Fn f, const cons_<Head, nil_t>& l) noexcept -> cons_<decltype(f(l.h)), nil_t>
+constexpr auto map(Fn f, const cons_<Head, nil_t>& l) noexcept -> cons_<decltype(f(l.h)), nil_t>
 { return cons_<decltype(f(l.h)), nil_t>(f(l.h), nil_t{}); }
 
 
@@ -271,7 +274,7 @@ template <typename Fn,
           typename Head1,
           typename Head2,
           typename To>
-auto map2_(Fn f, const cons_<Head1, nil_t>& l1, const cons_<Head2, nil_t>& l2, const To& t) noexcept
+constexpr auto map2_(Fn f, const cons_<Head1, nil_t>& l1, const cons_<Head2, nil_t>& l2, const To& t) noexcept
     -> cons_<decltype(f(l1.h, l2.h)), To>
 { return cons_<decltype(f(l1.h, l2.h)), To>(f(l1.h, l2.h), t); }
 
@@ -283,7 +286,7 @@ template <typename Fn,
           std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
           std::enable_if_t<l::is_not_nil_t<L1, L2>::value>* = nullptr,
           std::enable_if_t<l::length<L1>::value == l::length<L2>::value>* = nullptr>
-auto map2(Fn f, const L1& l1, const L2& l2) noexcept
+constexpr auto map2(Fn f, const L1& l1, const L2& l2) noexcept
     -> decltype(map2_(f, l1.t, l2.t, cons_<decltype(f(l1.h, l2.h)), nil_t>(f(l1.h, l2.h), l::nil_t{})))
 { return map2_(f, l1.t, l2.t, cons_<decltype(f(l1.h, l2.h)), nil_t>(f(l1.h, l2.h), nil_t{})); }
 
@@ -291,7 +294,7 @@ auto map2(Fn f, const L1& l1, const L2& l2) noexcept
 template <typename Fn,
           typename Head1,
           typename Head2>
-auto map2(Fn f, const cons_<Head1, nil_t>& l1, const cons_<Head2, nil_t>& l2) noexcept
+constexpr auto map2(Fn f, const cons_<Head1, nil_t>& l1, const cons_<Head2, nil_t>& l2) noexcept
     -> cons_<decltype(f(l1.h, l2.h)), nil_t>
 { return cons_<decltype(f(l1.h, l2.h)), nil_t>(f(l1.h, l2.h), nil_t{}); }
 
@@ -300,7 +303,7 @@ template <std::size_t N,
           typename Fn,
           typename From,
           typename To>
-auto mapi_(Fn f, From fl, To t) noexcept
+constexpr auto mapi_(Fn f, From fl, To t) noexcept
     // FIXME: not able to delcare this type.
     // -> decltype(mapi_<N+1>(f, fl.t, cons_<decltype(f(N, fl.h)), To>(f(N, fl.h), t)))
 { return mapi_<N+1>(f, fl.t, cons_<decltype(f(N, fl.h)), To>(f(N, fl.h), t)); }
@@ -309,7 +312,7 @@ template <std::size_t N,
           typename Fn,
           typename Head,
           typename To>
-auto mapi_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept -> cons_<decltype(f(N, l.h)), To>
+constexpr auto mapi_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept -> cons_<decltype(f(N, l.h)), To>
 { return cons_<decltype(f(N, l.h)), To>(f(N, l.h), t); }
 
 // mapi list of more than one element
@@ -317,26 +320,26 @@ template <typename Fn,
           typename L,
           std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
           std::enable_if_t<l::is_not_nil_t<L, L>::value>* = nullptr>
-auto mapi(Fn f, const L& l) noexcept
+constexpr auto mapi(Fn f, const L& l) noexcept
     -> decltype(mapi_<1>(f, l.t, cons_<decltype(f(0, l.h)), nil_t>(f(0, l.h), l::nil_t{})))
 { return mapi_<1>(f, l.t, l::cons_<decltype(f(0, l.h)), l::nil_t>(f(0, l.h), l::nil_t{})); }
 
 // explictly one element
 template <typename Fn, typename Head>
-auto mapi(Fn f, const cons_<Head, nil_t>& l) noexcept -> cons_<decltype(f(0, l.h)), nil_t>
+constexpr auto mapi(Fn f, const cons_<Head, nil_t>& l) noexcept -> cons_<decltype(f(0, l.h)), nil_t>
 { return cons_<decltype(f(0, l.h)), nil_t>(f(0, l.h), nil_t{}); }
 
 template <typename L1,
           typename L2,
           std::enable_if_t<length<L1>::value >= 1>* = nullptr>
-auto append_(const L1& l1, const L2& l2) noexcept
+constexpr auto append_(const L1& l1, const L2& l2) noexcept
     -> decltype(append_(l1.t, cons_<decltype(l1.h), L2>(l1.h, l2)))
 { return append_(l1.t, cons_<decltype(l1.h), L2>(l1.h, l2)); }
 
 template <typename L1,
           typename L2,
           std::enable_if_t<length<L1>::value == 0>* = nullptr>
-L2 append_(const L1& l1, const L2& l2) noexcept
+constexpr L2 append_(const L1& l1, const L2& l2) noexcept
 { return l2; }
 
 template <typename L1,
@@ -345,7 +348,7 @@ template <typename L1,
           std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
           std::enable_if_t<std::is_same<typename L1::head_type,
                                         typename L2::head_type>::value>* = nullptr>
-auto append(const L1& l1, const L2& l2) noexcept -> decltype(append_(rev(l1), l2))
+constexpr auto append(const L1& l1, const L2& l2) noexcept -> decltype(append_(rev(l1), l2))
 { return append_(rev(l1), l2); }
 
 template <typename L1,
@@ -354,17 +357,17 @@ template <typename L1,
           std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
           std::enable_if_t<std::is_same<typename L1::head_type,
                                         typename L2::head_type>::value>* = nullptr>
-auto rev_append(const L1& l1, const L2& l2) noexcept -> decltype(append_(rev(l1), l2))
+constexpr auto rev_append(const L1& l1, const L2& l2) noexcept -> decltype(append_(rev(l1), l2))
 { return append_(l1, l2); }
 
 template <typename L,
           std::enable_if_t<l::is_imm_list<L>::value>* = nullptr>
-auto hd(const L& l) noexcept -> typename L::head_type
+constexpr auto hd(const L& l) noexcept -> typename L::head_type
 { return l.h; }
 
 template <typename L,
           std::enable_if_t<l::is_imm_list<L>::value>* = nullptr>
-auto tl(const L& l) noexcept -> typename L::tail_type
+constexpr auto tl(const L& l) noexcept -> typename L::tail_type
 { return l.t; }
 
 // for_all
@@ -386,11 +389,11 @@ template <typename A,
           typename L,
           std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
           std::enable_if_t<std::is_same<A, typename L::head_type>::value>* = nullptr>
-bool mem(const A& a, const L& l) noexcept
+constexpr bool mem(const A& a, const L& l) noexcept
 { return a == l.h || mem(a, l.t); }
 
 template <typename A>
-bool mem(const A&, nil_t) noexcept
+constexpr bool mem(const A&, nil_t) noexcept
 { return false; }
 
 // for_all2
@@ -472,7 +475,7 @@ template <typename A,
           typename B,
           typename Tail,
           std::enable_if_t<!std::is_same<nil_t, Tail>::value>* = nullptr>
-auto assoc(const A& a, const cons_<std::tuple<A, B>, Tail>& l) -> B {
+constexpr auto assoc(const A& a, const cons_<std::tuple<A, B>, Tail>& l) -> B {
     if (std::get<0>(l.h) == a) { return std::get<1>(l.h); }
     return assoc(a, l.t);
 }
@@ -480,7 +483,7 @@ auto assoc(const A& a, const cons_<std::tuple<A, B>, Tail>& l) -> B {
 // assoc recursion end
 template <typename A,
           typename B>
-auto assoc(const A& a, const cons_<std::tuple<A, B>, nil_t>& l) -> B {
+constexpr auto assoc(const A& a, const cons_<std::tuple<A, B>, nil_t>& l) -> B {
     if (std::get<0>(l.h) != a) { throw not_found{}; }
     return std::get<1>(l.h);
 }
@@ -489,15 +492,15 @@ template <typename A,
           typename B,
           typename Tail,
           std::enable_if_t<!std::is_same<nil_t, Tail>::value>* = nullptr>
-bool mem_assoc(const A& a, const cons_<std::tuple<A, B>, Tail>& l) noexcept {
+constexpr bool mem_assoc(const A& a, const cons_<std::tuple<A, B>, Tail>& l) noexcept {
     if (std::get<0>(l.h) == a) { return true; }
-    return mew_assoc(a, l.t);
+    return mem_assoc(a, l.t);
 }
 
 // assoc recursion end
 template <typename A,
           typename B>
-bool mem_assoc(const A& a, const cons_<std::tuple<A, B>, nil_t>& l) noexcept {
+constexpr bool mem_assoc(const A& a, const cons_<std::tuple<A, B>, nil_t>& l) noexcept {
     if (std::get<0>(l.h) != a) { return false; }
     return true;
 }

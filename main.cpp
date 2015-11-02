@@ -31,12 +31,30 @@ auto add_element(L l) {
 }
 
 int main() {
-    auto a = cons(4, cons(3, cons(2, cons(1, cons(0, nil)))));
-    auto b = l::rev(a);
-    auto c = l::append(a, cons(10, cons(11, cons(12, cons(13, cons(14))))));
-    auto d = l::rev_append(a, cons(10, cons(11, cons(12, cons(13, cons(14))))));
-    auto e = cons(std::make_tuple('a', 1), cons(std::make_tuple('b', 42), cons(std::make_tuple('c', 84))));
-    int i = l::assoc('c', e);
+    constexpr auto a = cons(4, cons(3, cons(2, cons(1, cons(0, nil)))));
+    static_assert(l::hd(a) == 4, "hd a != 4");
+    static_assert(l::mem(2, a) == true, "mem a != true");
+    static_assert(l::mem(10, a) == false, "mem a != false");
+
+    // print type with an error
+    // l::type<decltype(a)> a_type;
+
+    constexpr auto b = l::rev(a);
+    static_assert(l::hd(b) == 0, "hd b != 0");
+
+    constexpr auto c = l::append(a, cons(10, cons(11, cons(12, cons(13, cons(14))))));
+    static_assert(l::length<decltype(c)>::value == 10, "c length != 10");
+    static_assert(l::nth<5>(c) == 10, "nth<5> c != 10");
+
+    constexpr auto d = l::rev_append(a, cons(10, cons(11, cons(12, cons(13, cons(14))))));
+    static_assert(l::nth<5>(d) == 10, "nth<5> d != 14");
+    static_assert(l::nth<0>(d) == 0, "nth<5> d != 14");
+
+    constexpr auto e = cons(std::make_tuple('a', 1), cons(std::make_tuple('b', 42), cons(std::make_tuple('c', 84))));
+    constexpr auto i = l::assoc('c', e);
+    static_assert(i == 84, "assoc('c') != 84");
+    static_assert(l::mem_assoc('b', e) == true, "mem_assoc('b', e) != true");
+    static_assert(l::mem_assoc('f', e) == false, "mem_assoc('f', e) != false");
 
     std::cout << a << std::endl;
     std::cout << b << std::endl;
