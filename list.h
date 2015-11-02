@@ -137,17 +137,17 @@ struct list_type_from_size<Head, 0> {
 
 template <std::size_t N,
           typename L,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<l::is_valid_list_pos<L, N>::value>* = nullptr,
-          std::enable_if_t<N >= 1>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<l::is_valid_list_pos<L, N>::value>,
+          typename = std::enable_if_t<N >= 1>>
 constexpr auto nth(const L& l) noexcept -> typename L::head_type
 { return nth<N-1>(l.t); }
 
 // end nth
 template <std::size_t N,
           typename L,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<N == 0>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<N == 0>>
 constexpr auto nth(const L& l) noexcept -> typename L::head_type
 { return l.h; }
 
@@ -156,7 +156,7 @@ constexpr auto nth(const L& l) noexcept -> typename L::head_type
 
 template <typename L,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>>
 constexpr void iter(Fn f, const L& l) {
     f(l.h);
     iter(f, l.t);
@@ -170,10 +170,14 @@ constexpr void iter(Fn f, const nil_t) {}
 template <typename L1,
           typename L2,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L1>::value>* = nullptr,
-          std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
-          std::enable_if_t<std::is_same<typename L1::head_type,
-                                        typename L2::head_type>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L1>::value>,
+          typename = std::enable_if_t<l::is_imm_list<L2>::value>,
+          typename = std::enable_if_t<
+                         std::is_same<
+                             typename L1::head_type,
+                             typename L2::head_type
+                         >::value
+                     >>
 constexpr void iter2(Fn f, const L1& l1, const L2& l2) {
     f(l1.h, l2.h);
     iter2(f, l1.t, l2.t);
@@ -188,7 +192,7 @@ constexpr void iter2(Fn, nil_t, nil_t) {}
 template <std::size_t N,
           typename L,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>>
 constexpr void iteri_(Fn f, const L& l) {
     f(N, l.h);
     iteri_<N+1>(f, l.t);
@@ -199,7 +203,7 @@ constexpr void iteri_(Fn f, const nil_t) {}
 
 template <typename L,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>>
 constexpr void iteri(Fn f, const L& l) {
     iteri_<0>(f, l);
 }
@@ -209,7 +213,8 @@ constexpr void iteri(Fn f, const L& l) {
 // implementation rev
 template <typename From,
           typename To>
-constexpr auto rev_(From f, To t) noexcept -> decltype(rev_(f.t, l::cons_<decltype(f.h), To>(f.h, t)))
+constexpr auto rev_(From f, To t) noexcept
+    -> decltype(rev_(f.t, l::cons_<decltype(f.h), To>(f.h, t)))
 { return rev_(f.t, l::cons_<decltype(f.h), To>(f.h, t)); }
 
 template <typename Head,
@@ -219,8 +224,8 @@ constexpr cons_<Head, To> rev_(const cons_<Head, nil_t>& f, To t) noexcept
 
 // rev list of more than one element
 template <typename L,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<l::is_not_nil_t<L, L>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<l::is_not_nil_t<L, L>::value>>
 constexpr L rev(const L& l) noexcept
 { return rev_(l.t, l::cons_<decltype(l.h), l::nil_t>(l.h, l::nil_t{})); }
 
@@ -246,8 +251,8 @@ constexpr auto map_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept -> cons_<d
 // map list of more than one element
 template <typename Fn,
           typename L,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<l::is_not_nil_t<L, L>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<l::is_not_nil_t<L, L>::value>>
 constexpr auto map(Fn f, const L& l) noexcept
     -> decltype(map_(f, l.t, cons_<decltype(f(l.h)), nil_t>(f(l.h), l::nil_t{})))
 { return map_(f, l.t, l::cons_<decltype(f(l.h)), l::nil_t>(f(l.h), l::nil_t{})); }
@@ -274,7 +279,10 @@ template <typename Fn,
           typename Head1,
           typename Head2,
           typename To>
-constexpr auto map2_(Fn f, const cons_<Head1, nil_t>& l1, const cons_<Head2, nil_t>& l2, const To& t) noexcept
+constexpr auto map2_(Fn f,
+                     const cons_<Head1, nil_t>& l1,
+                     const cons_<Head2, nil_t>& l2,
+                     const To& t) noexcept
     -> cons_<decltype(f(l1.h, l2.h)), To>
 { return cons_<decltype(f(l1.h, l2.h)), To>(f(l1.h, l2.h), t); }
 
@@ -282,10 +290,10 @@ constexpr auto map2_(Fn f, const cons_<Head1, nil_t>& l1, const cons_<Head2, nil
 template <typename Fn,
           typename L1,
           typename L2,
-          std::enable_if_t<l::is_imm_list<L1>::value>* = nullptr,
-          std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
-          std::enable_if_t<l::is_not_nil_t<L1, L2>::value>* = nullptr,
-          std::enable_if_t<l::length<L1>::value == l::length<L2>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L1>::value>,
+          typename = std::enable_if_t<l::is_imm_list<L2>::value>,
+          typename = std::enable_if_t<l::is_not_nil_t<L1, L2>::value>,
+          typename = std::enable_if_t<l::length<L1>::value == l::length<L2>::value>>
 constexpr auto map2(Fn f, const L1& l1, const L2& l2) noexcept
     -> decltype(map2_(f, l1.t, l2.t, cons_<decltype(f(l1.h, l2.h)), nil_t>(f(l1.h, l2.h), l::nil_t{})))
 { return map2_(f, l1.t, l2.t, cons_<decltype(f(l1.h, l2.h)), nil_t>(f(l1.h, l2.h), nil_t{})); }
@@ -312,70 +320,84 @@ template <std::size_t N,
           typename Fn,
           typename Head,
           typename To>
-constexpr auto mapi_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept -> cons_<decltype(f(N, l.h)), To>
+constexpr auto mapi_(Fn f, const cons_<Head, nil_t>& l, To t) noexcept
+    -> cons_<decltype(f(N, l.h)), To>
 { return cons_<decltype(f(N, l.h)), To>(f(N, l.h), t); }
 
 // mapi list of more than one element
 template <typename Fn,
           typename L,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<l::is_not_nil_t<L, L>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<l::is_not_nil_t<L, L>::value>>
 constexpr auto mapi(Fn f, const L& l) noexcept
     -> decltype(mapi_<1>(f, l.t, cons_<decltype(f(0, l.h)), nil_t>(f(0, l.h), l::nil_t{})))
 { return mapi_<1>(f, l.t, l::cons_<decltype(f(0, l.h)), l::nil_t>(f(0, l.h), l::nil_t{})); }
 
 // explictly one element
 template <typename Fn, typename Head>
-constexpr auto mapi(Fn f, const cons_<Head, nil_t>& l) noexcept -> cons_<decltype(f(0, l.h)), nil_t>
+constexpr auto mapi(Fn f, const cons_<Head, nil_t>& l) noexcept
+    -> cons_<decltype(f(0, l.h)), nil_t>
 { return cons_<decltype(f(0, l.h)), nil_t>(f(0, l.h), nil_t{}); }
 
 template <typename L1,
           typename L2,
-          std::enable_if_t<length<L1>::value >= 1>* = nullptr>
+          typename = std::enable_if_t<length<L1>::value >= 1>>
 constexpr auto append_(const L1& l1, const L2& l2) noexcept
     -> decltype(append_(l1.t, cons_<decltype(l1.h), L2>(l1.h, l2)))
 { return append_(l1.t, cons_<decltype(l1.h), L2>(l1.h, l2)); }
 
 template <typename L1,
           typename L2,
-          std::enable_if_t<length<L1>::value == 0>* = nullptr>
+          typename = std::enable_if_t<length<L1>::value == 0>>
 constexpr L2 append_(const L1& l1, const L2& l2) noexcept
 { return l2; }
 
 template <typename L1,
           typename L2,
-          std::enable_if_t<l::is_imm_list<L1>::value>* = nullptr,
-          std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
-          std::enable_if_t<std::is_same<typename L1::head_type,
-                                        typename L2::head_type>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L1>::value>,
+          typename = std::enable_if_t<l::is_imm_list<L2>::value>,
+          typename = std::enable_if_t<
+                         std::is_same<
+                             typename L1::head_type,
+                             typename L2::head_type
+                         >::value
+                     >>
 constexpr auto append(const L1& l1, const L2& l2) noexcept -> decltype(append_(rev(l1), l2))
 { return append_(rev(l1), l2); }
 
 template <typename L1,
           typename L2,
-          std::enable_if_t<l::is_imm_list<L1>::value>* = nullptr,
-          std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
-          std::enable_if_t<std::is_same<typename L1::head_type,
-                                        typename L2::head_type>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L1>::value>,
+          typename = std::enable_if_t<l::is_imm_list<L2>::value>,
+          typename = std::enable_if_t<
+                         std::is_same<
+                             typename L1::head_type,
+                             typename L2::head_type
+                         >::value
+                     >>
 constexpr auto rev_append(const L1& l1, const L2& l2) noexcept -> decltype(append_(rev(l1), l2))
 { return append_(l1, l2); }
 
 template <typename L,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>>
 constexpr auto hd(const L& l) noexcept -> typename L::head_type
 { return l.h; }
 
 template <typename L,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>>
 constexpr auto tl(const L& l) noexcept -> typename L::tail_type
 { return l.t; }
 
 // for_all
 template <typename L,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<std::is_convertible<Fn,
-             std::function<bool(typename L::head_type)>>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<
+                         std::is_convertible<
+                             Fn,
+                             std::function<bool(typename L::head_type)>
+                         >::value
+                     >>
 bool for_all(Fn f, const L& l) noexcept
 { return f(l.h) && for_all(f, l.t); }
 
@@ -387,8 +409,8 @@ bool for_all(Fn f, nil_t) noexcept
 // mem
 template <typename A,
           typename L,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<std::is_same<A, typename L::head_type>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<std::is_same<A, typename L::head_type>::value>>
 constexpr bool mem(const A& a, const L& l) noexcept
 { return a == l.h || mem(a, l.t); }
 
@@ -400,12 +422,16 @@ constexpr bool mem(const A&, nil_t) noexcept
 template <typename L1,
           typename L2,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L1>::value>* = nullptr,
-          std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
-          std::enable_if_t<l::length<L1>::value == l::length<L2>::value>* = nullptr,
-          std::enable_if_t<std::is_convertible<Fn,
-             std::function<bool(typename L1::head_type,
-                                typename L2::head_type)>>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L1>::value>,
+          typename = std::enable_if_t<l::is_imm_list<L2>::value>,
+          typename = std::enable_if_t<l::length<L1>::value == l::length<L2>::value>,
+          typename = std::enable_if_t<
+                         std::is_convertible<
+                             Fn,
+                             std::function<bool(typename L1::head_type,
+                                                typename L2::head_type)>
+                         >::value
+                     >>
 bool for_all2(Fn f, const L1& l1, const L2& l2) noexcept
 { return f(l1.h, l2.h) && for_all(f, l1.t, l2.t); }
 
@@ -417,9 +443,13 @@ bool for_all2(Fn f, nil_t, nil_t) noexcept
 // exists
 template <typename L,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<std::is_convertible<Fn,
-              std::function<bool(typename L::head_type)>>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<
+                         std::is_convertible<
+                             Fn,
+                             std::function<bool(typename L::head_type)>
+                         >::value
+                     >>
 bool exists(Fn f, const L& l) noexcept
 { return f(l.h) || exists(f, l.t); }
 
@@ -432,12 +462,16 @@ bool exists(Fn f, nil_t) noexcept
 template <typename L1,
           typename L2,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L1>::value>* = nullptr,
-          std::enable_if_t<l::is_imm_list<L2>::value>* = nullptr,
-          std::enable_if_t<l::length<L1>::value == l::length<L2>::value>* = nullptr,
-          std::enable_if_t<std::is_convertible<Fn,
-              std::function<bool(typename L1::head_type,
-                                 typename L2::head_type)>>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L1>::value>,
+          typename = std::enable_if_t<l::is_imm_list<L2>::value>,
+          typename = std::enable_if_t<l::length<L1>::value == l::length<L2>::value>,
+          typename = std::enable_if_t<
+                         std::is_convertible<
+                             Fn,
+                             std::function<bool(typename L1::head_type,
+                                                typename L2::head_type)>
+                         >::value
+                     >>
 bool exists2(Fn f, const L1& l1, const L2& l2) noexcept {
     return f(l1.h, l2.h) || exists2(f, l1.t, l2.t);
 }
@@ -451,10 +485,14 @@ bool exists2(Fn f, nil_t, nil_t) noexcept
 // find
 template <typename L,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<!std::is_same<nil_t, typename L::tail_type>::value>* = nullptr,
-          std::enable_if_t<std::is_convertible<Fn,
-              std::function<bool(typename L::head_type)>>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<!std::is_same<nil_t, typename L::tail_type>::value>,
+          typename = std::enable_if_t<
+                         std::is_convertible<
+                             Fn,
+                             std::function<bool(typename L::head_type)>
+                         >::value
+                     >>
 auto find(Fn f, const L& l) noexcept -> typename L::head_type {
     if (f(l.h)) { return l.h; }
     else { return find(f, l.t); }
@@ -464,8 +502,8 @@ auto find(Fn f, const L& l) noexcept -> typename L::head_type {
 // find recursion end
 template <typename L,
           typename Fn,
-          std::enable_if_t<l::is_imm_list<L>::value>* = nullptr,
-          std::enable_if_t<std::is_same<nil_t, typename L::tail_type>::value>* = nullptr>
+          typename = std::enable_if_t<l::is_imm_list<L>::value>,
+          typename = std::enable_if_t<std::is_same<nil_t, typename L::tail_type>::value>>
 auto find(Fn f, const L& l) -> typename L::head_type {
     if (not f(l.h)) { throw not_found{}; }
     return l.h;
@@ -474,7 +512,7 @@ auto find(Fn f, const L& l) -> typename L::head_type {
 template <typename A,
           typename B,
           typename Tail,
-          std::enable_if_t<!std::is_same<nil_t, Tail>::value>* = nullptr>
+          typename = std::enable_if_t<!std::is_same<nil_t, Tail>::value>>
 constexpr auto assoc(const A& a, const cons_<std::tuple<A, B>, Tail>& l) -> B {
     if (std::get<0>(l.h) == a) { return std::get<1>(l.h); }
     return assoc(a, l.t);
@@ -491,7 +529,7 @@ constexpr auto assoc(const A& a, const cons_<std::tuple<A, B>, nil_t>& l) -> B {
 template <typename A,
           typename B,
           typename Tail,
-          std::enable_if_t<!std::is_same<nil_t, Tail>::value>* = nullptr>
+          typename = std::enable_if_t<!std::is_same<nil_t, Tail>::value>>
 constexpr bool mem_assoc(const A& a, const cons_<std::tuple<A, B>, Tail>& l) noexcept {
     if (std::get<0>(l.h) == a) { return true; }
     return mem_assoc(a, l.t);
@@ -513,9 +551,9 @@ static constexpr l::empty_t empty{};
 // construct from a element and a list
 template<typename Head,
          typename Tail,
-         std::enable_if_t<l::is_not_nil_t<Head, Tail>::value>* = nullptr,
-         std::enable_if_t<l::is_not_empty_t<Head, Tail>::value>* = nullptr,
-         std::enable_if_t<std::is_same<Head, typename Tail::head_type>::value>* = nullptr>
+         typename = std::enable_if_t<l::is_not_nil_t<Head, Tail>::value>,
+         typename = std::enable_if_t<l::is_not_empty_t<Head, Tail>::value>,
+         typename = std::enable_if_t<std::is_same<Head, typename Tail::head_type>::value>>
 constexpr l::cons_<Head, Tail> cons(const Head& h, const Tail& t)
 { return std::move(l::cons_<Head, Tail>(h, t)); }
 
